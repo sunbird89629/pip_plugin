@@ -1,15 +1,15 @@
-import 'dart:html' as html;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:pip_plugin/src/contracts/base_pip_plugin.dart';
 import 'package:pip_plugin/src/contracts/pip_plugin_platform_interface.dart';
 import 'package:pip_plugin/pip_configuration.dart';
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 
 class PipPluginWeb extends BasePipPlugin {
-  html.VideoElement? _video;
-  html.CanvasElement? _canvas;
+  web.HTMLVideoElement? _video;
+  web.HTMLCanvasElement? _canvas;
   late PipConfiguration _configuration;
 
   @override
@@ -21,13 +21,12 @@ class PipPluginWeb extends BasePipPlugin {
 
   String _colorToCssRgba(Color color) =>
       'rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha / 255})';
-
+      
   @override
   Future<bool> isPipSupported() async {
     try {
-      final enabled = js_util.getProperty(
-          html.document, 'pictureInPictureEnabled') as bool?;
-      return enabled == true;
+      final enabled = web.document.pictureInPictureEnabled;
+      return enabled;
     } catch (e, st) {
       debugPrint('PipPluginWeb.isPipSupported error: $e\n$st');
       return false;
@@ -51,23 +50,24 @@ class PipPluginWeb extends BasePipPlugin {
   void _initializeCanvasAndVideo() {
     try {
       final size = _getSizeFromRatio();
-      _video = html.VideoElement()
+      _video = web.HTMLVideoElement()
         ..style.position = 'absolute'
         ..style.left = '-9999px'
         ..autoplay = true
         ..muted = true;
-      _canvas = html.CanvasElement(
-          width: size.width.toInt(), height: size.height.toInt())
+      _canvas = web.HTMLCanvasElement()
+        ..width = size.width.toInt()
+        ..height = size.height.toInt()
         ..style.position = 'absolute'
         ..style.left = '-9999px';
 
-      html.document.body!.append(_video!);
-      html.document.body!.append(_canvas!);
+      web.document.body!.appendChild(_video!);
+      web.document.body!.appendChild(_canvas!);
 
       _video!.srcObject = _canvas!.captureStream(30);
-      _video!.addEventListener('leavepictureinpicture', (event) {
+      _video!.addEventListener('leavepictureinpicture', (web.Event event) {
         handlePipExited();
-      });
+      }.toJS);
       _updateCanvas();
     } catch (e, st) {
       debugPrint('PipPluginWeb._initializeCanvasAndVideo error: $e\n$st');
@@ -84,12 +84,10 @@ class PipPluginWeb extends BasePipPlugin {
     }
 
     try {
-      await _video!.play();
-      final currentPiP =
-          js_util.getProperty(html.document, 'pictureInPictureElement');
+      await _video!.play().toDart;
+      final currentPiP = web.document.pictureInPictureElement;
       if (currentPiP != _video) {
-        await js_util.promiseToFuture(
-            js_util.callMethod(_video!, 'requestPictureInPicture', []));
+        await _video!.requestPictureInPicture().toDart;
       }
       handlePipEntered();
       return true;
@@ -103,8 +101,7 @@ class PipPluginWeb extends BasePipPlugin {
   Future<bool> stopPip() async {
     checkInitialized();
     try {
-      await js_util.promiseToFuture(
-          js_util.callMethod(html.document, 'exitPictureInPicture', []));
+      await web.document.exitPictureInPicture().toDart;
       handlePipExited();
       return true;
     } catch (e, st) {
@@ -139,18 +136,18 @@ class PipPluginWeb extends BasePipPlugin {
   }
 
   void _updateCanvas({String text = ''}) {
-    final ctx = _canvas?.context2D;
+    final ctx = _canvas?.getContext('2d') as web.CanvasRenderingContext2D?;
     if (ctx == null) {
       throw StateError('Canvas not initialized');
     }
     ctx
-      ..clearRect(0, 0, _canvas!.width!, _canvas!.height!)
-      ..fillStyle = _colorToCssRgba(_configuration.backgroundColor)
-      ..fillRect(0, 0, _canvas!.width!, _canvas!.height!)
+      ..clearRect(0, 0, _canvas!.width, _canvas!.height)
+      ..fillStyle = _colorToCssRgba(_configuration.backgroundColor).toJS
+      ..fillRect(0, 0, _canvas!.width, _canvas!.height)
       ..font = '${_configuration.textSize}px Arial'
-      ..fillStyle = _colorToCssRgba(_configuration.textColor)
+      ..fillStyle = _colorToCssRgba(_configuration.textColor).toJS
       ..textAlign = _getTextAlign()
-      ..fillText(text, _canvas!.width! / 2, _canvas!.height! / 2);
+      ..fillText(text, _canvas!.width / 2, _canvas!.height / 2);
   }
 
   String _getTextAlign() => switch (_configuration.textAlign) {

@@ -1,3 +1,7 @@
+## 0.0.1+2
+
+- Update TextPipWidget.
+
 ## 0.0.1+1
 
 - Update packages.

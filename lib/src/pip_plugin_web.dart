@@ -21,7 +21,7 @@ class PipPluginWeb extends BasePipPlugin {
 
   String _colorToCssRgba(Color color) =>
       'rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha / 255})';
-      
+
   @override
   Future<bool> isPipSupported() async {
     try {
@@ -65,9 +65,11 @@ class PipPluginWeb extends BasePipPlugin {
       web.document.body!.appendChild(_canvas!);
 
       _video!.srcObject = _canvas!.captureStream(30);
-      _video!.addEventListener('leavepictureinpicture', (web.Event event) {
-        handlePipExited();
-      }.toJS);
+      _video!.addEventListener(
+          'leavepictureinpicture',
+          (web.Event event) {
+            handlePipExited();
+          }.toJS);
       _updateCanvas();
     } catch (e, st) {
       debugPrint('PipPluginWeb._initializeCanvasAndVideo error: $e\n$st');

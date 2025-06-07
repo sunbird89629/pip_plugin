@@ -1,6 +1,6 @@
 name: pip_plugin
 description: Flutter plugin for displaying customizable text overlays in Picture-in-Picture mode across all platforms.
-version: 0.0.1+1
+version: 0.0.1+2
 
 homepage: https://github.com/gyoussef55/pip_plugin
 repository: https://github.com/gyoussef55/pip_plugin

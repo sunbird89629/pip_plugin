@@ -33,12 +33,18 @@ class _TextPipWidgetState extends State<TextPipWidget> {
       stream: pipPlugin!.pipActiveStream,
       builder: (context, snapshot) {
         final isPipActive = snapshot.data ?? false;
-        return isPipActive
-            ? _PipContent(
-                pipPlugin: pipPlugin!,
-                scrollController: _scrollController,
-              )
-            : widget.child ?? const SizedBox.shrink();
+        return Stack(
+          children: [
+            widget.child ?? const SizedBox.shrink(),
+            if (isPipActive)
+              Positioned.fill(
+                child: _PipContent(
+                  pipPlugin: pipPlugin!,
+                  scrollController: _scrollController,
+                ),
+              ),
+          ],
+        );
       },
     );
   }

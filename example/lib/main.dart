@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:pip_plugin/pip_configuration.dart';
 import 'package:pip_plugin/pip_plugin.dart';
 import 'package:pip_plugin/text_pip_widget.dart';
 
@@ -28,10 +30,13 @@ class _PipTimerPageState extends State<PipTimerPage> {
   final PipPlugin _plugin = PipPlugin();
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
-  String _time = '00:00';
+  final String _time = '00:00';
   bool _pipStarted = false;
   bool _isSupported = false;
   late final StreamSubscription<bool> _pipStatusSub;
+
+  final voiceScript =
+      "Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!";
 
   @override
   void initState() {
@@ -53,23 +58,26 @@ class _PipTimerPageState extends State<PipTimerPage> {
     final supported = await _plugin.isPipSupported();
     setState(() => _isSupported = supported);
     if (supported) {
-      await _plugin.setupPip();
+      await _plugin.setupPip(
+        configuration: PipConfiguration.initial.copyWith(
+          textColor: Colors.red,
+        ),
+      );
     }
   }
-
-  void _startTimer() {
-    _stopwatch.start();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final elapsed = _stopwatch.elapsed;
-      setState(() {
-        _time = '${elapsed.inMinutes.toString().padLeft(2, '0')}:'
-            '${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
-      });
-      if (_pipStarted) {
-        _plugin.updateText(_time);
-      }
-    });
-  }
+  // void _startTimer() {
+  //   _stopwatch.start();
+  //   _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+  //     final elapsed = _stopwatch.elapsed;
+  //     setState(() {
+  //       _time = '${elapsed.inMinutes.toString().padLeft(2, '0')}:'
+  //           '${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
+  //     });
+  //     if (_pipStarted) {
+  //       _plugin.updateText('aaaa${_time}bbbb');
+  //     }
+  //   });
+  // }
 
   void _stopTimer() {
     _stopwatch.stop();
@@ -78,11 +86,12 @@ class _PipTimerPageState extends State<PipTimerPage> {
   }
 
   Future<void> _startPip() async {
-    await _plugin.updateText(_time);
+    // await _plugin.updateText(_time);
+    await _plugin.updateText(voiceScript);
     final started = await _plugin.startPip();
     if (started) {
       setState(() => _pipStarted = true);
-      _startTimer();
+      // _startTimer();
     } else {
       _showSnackBar('Failed to start PiP');
     }
@@ -118,7 +127,12 @@ class _PipTimerPageState extends State<PipTimerPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_time, style: const TextStyle(fontSize: 48)),
+              Expanded(
+                child: Text(
+                  voiceScript,
+                  style: const TextStyle(fontSize: 48),
+                ),
+              ),
               const SizedBox(height: 32),
               if (_isSupported)
                 ElevatedButton(
@@ -126,8 +140,13 @@ class _PipTimerPageState extends State<PipTimerPage> {
                   child: Text(_pipStarted ? 'Stop PiP' : 'Start PiP'),
                 )
               else
-                const Text('PiP not supported on this platform',
-                    style: TextStyle(color: Colors.red)),
+                const Text(
+                  'PiP not supported on this platform',
+                  style: TextStyle(color: Colors.red),
+                ),
+              const SizedBox(
+                height: 40,
+              ),
             ],
           ),
         ),

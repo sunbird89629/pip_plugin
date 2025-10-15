@@ -88,6 +88,14 @@ class PipPluginAndroid extends BasePipPlugin {
   }
 
   @override
+  Future<void> controlScroll({
+    required bool isScrolling,
+    double? speed,
+  }) async {
+    // no-op: scrolling is not supported on Android
+  }
+
+  @override
   void dispose() {
     super.dispose();
     try {

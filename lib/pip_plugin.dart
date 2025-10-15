@@ -70,6 +70,20 @@ class PipPlugin {
     return PipPluginPlatform.instance.updateText(text);
   }
 
+  /// Controls the automatic scrolling of the text in the PiP window.
+  ///
+  /// This is currently only supported on iOS.
+  Future<void> controlScroll({
+    required bool isScrolling,
+    double? speed,
+  }) {
+    _ensureNotDisposed();
+    return PipPluginPlatform.instance.controlScroll(
+      isScrolling: isScrolling,
+      speed: speed,
+    );
+  }
+
   /// A stream that emits the active status of PiP mode.
   Stream<bool> get pipActiveStream {
     _ensureNotDisposed();

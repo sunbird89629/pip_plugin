@@ -1,10 +1,11 @@
+import 'dart:js_interop';
 import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:pip_plugin/pip_configuration.dart';
 import 'package:pip_plugin/src/contracts/base_pip_plugin.dart';
 import 'package:pip_plugin/src/contracts/pip_plugin_platform_interface.dart';
-import 'package:pip_plugin/pip_configuration.dart';
-import 'dart:js_interop';
 import 'package:web/web.dart' as web;
 
 class PipPluginWeb extends BasePipPlugin {
@@ -175,5 +176,11 @@ class PipPluginWeb extends BasePipPlugin {
     }
     _video = null;
     _canvas = null;
+  }
+
+  @override
+  Future<void> controlScroll({required bool isScrolling, double? speed}) {
+    // TODO: implement controlScroll
+    throw UnimplementedError();
   }
 }

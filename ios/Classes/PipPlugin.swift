@@ -1,30 +1,47 @@
-import Flutter
-import UIKit
 import AVKit
+import Combine
+import Flutter
 import SwiftUI
+import UIKit
 
 public class PipPlugin: NSObject, FlutterPlugin {
     private var channel: FlutterMethodChannel?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "pip_plugin", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(
+            name: "pip_plugin",
+            binaryMessenger: registrar.messenger()
+        )
         let instance = PipPlugin()
         instance.channel = channel
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func handle(
+        _ call: FlutterMethodCall,
+        result: @escaping FlutterResult
+    ) {
         if #available(iOS 15.0, *) {
             PipHandler.handle(call: call, result: result, channel: channel)
         } else {
-            result(FlutterError(code: "UNSUPPORTED_VERSION", message: "iOS 15.0 or higher required", details: nil))
+            result(
+                FlutterError(
+                    code: "UNSUPPORTED_VERSION",
+                    message: "iOS 15.0 or higher required",
+                    details: nil
+                )
+            )
         }
     }
 }
 
 @available(iOS 15.0, *)
 private class PipHandler {
-    static func handle(call: FlutterMethodCall, result: @escaping FlutterResult, channel: FlutterMethodChannel?) {
+    static func handle(
+        call: FlutterMethodCall,
+        result: @escaping FlutterResult,
+        channel: FlutterMethodChannel?
+    ) {
         switch call.method {
         case "setupPip":
             guard let args = call.arguments as? [String: Any] else {
@@ -62,7 +79,8 @@ private class PipHandler {
 
         case "updateText":
             guard let args = call.arguments as? [String: Any],
-                  let text = args["text"] as? String else {
+                let text = args["text"] as? String
+            else {
                 result(false)
                 return
             }
@@ -75,6 +93,20 @@ private class PipHandler {
                 return
             }
             PipTextAction.shared.updateConfiguration(args)
+            result(true)
+
+        case "controlScroll":
+            guard let args = call.arguments as? [String: Any],
+                let isScrolling = args["isScrolling"] as? Bool
+            else {
+                result(false)
+                return
+            }
+            let speed = args["speed"] as? Double
+            PipTextAction.shared.controlScroll(
+                isScrolling: isScrolling,
+                speed: speed
+            )
             result(true)
 
         case "isPipSupported":
@@ -107,7 +139,9 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         cleanup()
 
         guard AVPictureInPictureController.isPictureInPictureSupported(),
-              let rootView = UIApplication.shared.windows.first?.rootViewController?.view else { return }
+            let rootView = UIApplication.shared.windows.first?
+                .rootViewController?.view
+        else { return }
 
         storedConfig = [
             "text": storedConfig["text"] ?? "",
@@ -115,7 +149,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
             "textColor": textColor ?? [],
             "textSize": textSize ?? 16.0,
             "textAlign": textAlign ?? "center",
-            "ratio": sizeRatio ?? []
+            "ratio": sizeRatio ?? [],
         ]
 
         let videoCallVC = AVPictureInPictureVideoCallViewController()
@@ -161,7 +195,10 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         host.didMove(toParent: videoCallVC)
         addConstrainedSubview(host.view, to: videoCallVC.view)
 
-        let contentSize = calculateContentSize(ratio: sizeRatio, defaultSize: rootView.frame.size)
+        let contentSize = calculateContentSize(
+            ratio: sizeRatio,
+            defaultSize: rootView.frame.size
+        )
         videoCallVC.preferredContentSize = contentSize
 
         let source = AVPictureInPictureController.ContentSource(
@@ -174,35 +211,37 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     }
 
     func startPip() -> Bool {
-         guard AVPictureInPictureController.isPictureInPictureSupported() else { return false }
+        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+            return false
+        }
 
-    if pipController == nil {
-    setupPip(
-      backgroundColor: storedConfig["backgroundColor"] as? [Int],
-      textColor:       storedConfig["textColor"]       as? [Int],
-      textSize:        storedConfig["textSize"]        as? Double,
-      textAlign:       storedConfig["textAlign"]       as? String,
-      sizeRatio:       storedConfig["ratio"]           as? [Int]
-    )
+        if pipController == nil {
+            setupPip(
+                backgroundColor: storedConfig["backgroundColor"] as? [Int],
+                textColor: storedConfig["textColor"] as? [Int],
+                textSize: storedConfig["textSize"] as? Double,
+                textAlign: storedConfig["textAlign"] as? String,
+                sizeRatio: storedConfig["ratio"] as? [Int]
+            )
 
-    DispatchQueue.main.async { [weak self] in
-      guard let ctrl = self?.pipController,
+            DispatchQueue.main.async { [weak self] in
+                guard let ctrl = self?.pipController,
+                    !ctrl.isPictureInPictureActive
+                else { return }
+                ctrl.startPictureInPicture()
+            }
+
+            return true
+        }
+
+        guard let ctrl = pipController,
             !ctrl.isPictureInPictureActive
-      else { return }
-      ctrl.startPictureInPicture()
-    }
+        else {
+            return pipController?.isPictureInPictureActive ?? false
+        }
 
-    return true
-  }
-
-  guard let ctrl = pipController,
-        !ctrl.isPictureInPictureActive
-  else {
-    return pipController?.isPictureInPictureActive ?? false
-  }
-
-  ctrl.startPictureInPicture()
-  return true
+        ctrl.startPictureInPicture()
+        return true
     }
 
     func hidePip() {
@@ -246,15 +285,29 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         }
 
         if let ratio = args["ratio"] as? [Int],
-           let vc = pipVC,
-           let rootView = UIApplication.shared.windows.first?.rootViewController?.view {
-            vc.preferredContentSize = calculateContentSize(ratio: ratio, defaultSize: rootView.frame.size)
+            let vc = pipVC,
+            let rootView = UIApplication.shared.windows.first?
+                .rootViewController?.view
+        {
+            vc.preferredContentSize = calculateContentSize(
+                ratio: ratio,
+                defaultSize: rootView.frame.size
+            )
         }
 
         storedConfig.merge(args) { _, new in new }
     }
 
-    func pictureInPictureControllerDidStopPictureInPicture(_ controller: AVPictureInPictureController) {
+    func controlScroll(isScrolling: Bool, speed: Double?) {
+        model?.isScrolling = isScrolling
+        if let newSpeed = speed {
+            model?.scrollSpeed = newSpeed
+        }
+    }
+
+    func pictureInPictureControllerDidStopPictureInPicture(
+        _ controller: AVPictureInPictureController
+    ) {
         Self.onStopPip?()
         pipController = nil
     }
@@ -267,7 +320,9 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         model = nil
     }
 
-    private func calculateContentSize(ratio: [Int]?, defaultSize: CGSize) -> CGSize {
+    private func calculateContentSize(ratio: [Int]?, defaultSize: CGSize)
+        -> CGSize
+    {
         guard let r = ratio, r.count == 2 else { return defaultSize }
         return CGSize(width: CGFloat(r[0]), height: CGFloat(r[1]))
     }
@@ -279,7 +334,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
             subview.topAnchor.constraint(equalTo: view.topAnchor),
             subview.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             subview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            subview.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            subview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
     }
 }
@@ -290,7 +345,11 @@ private class PipTextModel: ObservableObject {
     @Published var color: Color = .white
     @Published var background: Color = .black
     @Published var fontSize: Double = 16.0
+
     @Published var alignment: TextAlignment = .center
+
+    @Published var isScrolling: Bool = false
+    @Published var scrollSpeed: Double = 10.0
 
     init(text: String) {
         self.text = text
@@ -301,24 +360,104 @@ private class PipTextModel: ObservableObject {
 private struct PipTextView: View {
     @ObservedObject var model: PipTextModel
 
-    private var frameAlignment: Alignment {
-        switch model.alignment {
-        case .leading:  return .leading
-        case .trailing: return .trailing
-        default:        return .center
-        }
-    }
+    @State private var scrollOffset: CGFloat = 0
+    private let timer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common)
+        .autoconnect()
 
     var body: some View {
-        Text(model.text)
-            .foregroundColor(model.color)
-            .font(.system(size: model.fontSize))
-            .multilineTextAlignment(model.alignment)
-            .frame(
-                maxWidth:  .infinity,
-                maxHeight: .infinity,
-                alignment: frameAlignment
-            )
-            .background(model.background)
+        //        ScrollViewReader { scrollViewProxy in
+        //            ScrollView(.vertical, showsIndicators: false) {
+        //                GeometryReader { geometry in
+        //                    let totalHeight = geometry.size.height
+        //
+        //                    Text(model.text)
+        //                        .foregroundColor(model.color)
+        //                        .font(.system(size: model.fontSize))
+        //                        .multilineTextAlignment(model.alignment)
+        //                        .frame(minHeight: 400)
+        //                        .lineLimit(10)
+        //                        .id("teleprompter_text")
+        //                        .onReceive(timer) { _ in
+        ////                            guard model.isScrolling else { return }
+        //
+        ////                            let increment = model.scrollSpeed / 60.0
+        //                            let increment = 1.0
+        //                            let newOffset = scrollOffset + increment
+        //
+        //                            scrollOffset = newOffset
+        //                            withAnimation(.linear(duration: 0.01)) {
+        ////                                scrollViewProxy.scrollTo("teleprompter_text", anchor: .top)
+        ////                                scrollViewProxy.scrollTo(<#T##id: Hashable##Hashable#>)
+        ////                                scrollViewProxy.scrollTo(<#T##id: Hashable##Hashable#>)
+        //                            }
+        //
+        ////                            if newOffset < totalHeight {
+        ////                                scrollOffset = newOffset
+        ////                                withAnimation(.linear(duration: 0.01)) {
+        ////                                    scrollViewProxy.scrollTo("teleprompter_text", anchor: .top)
+        ////                                }
+        ////                            } else {
+        ////                                model.isScrolling = false
+        ////                            }
+        //                        }
+        //                }
+        //            }
+        //            .onChange(of: model.isScrolling) { isScrolling in
+        //                if !isScrolling {
+        //                    scrollOffset = 0
+        //                    withAnimation {
+        //                        scrollViewProxy.scrollTo("teleprompter_text", anchor: .top)
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        .background(model.background)
+        AutoScrollTextView(content: model.text)
+            .fixedSize()
     }
+}
+
+@available(iOS 15.0, *)
+struct AutoScrollTextView: View {
+    var content: String
+    let interval: TimeInterval = 0.02
+
+    @State private var offset: CGFloat = 0
+    @State private var timer: AnyCancellable?
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(content).font(.system(size: 16)).fixedSize(
+                    horizontal: true,
+                    vertical: true
+                )
+            }
+            .offset(y: -offset)
+        }.background(Color.red)
+            .fixedSize()
+            .onAppear {
+                //            let totalHeight = CGFloat(lines.count) * 24
+                timer = Timer.publish(every: interval, on: .main, in: .common)
+                    .autoconnect()
+                    .sink { _ in
+                        offset += 0.5
+                        //                    if offset > totalHeight {
+                        //                        offset = 0
+                        //                    }
+                    }
+            }
+            .onDisappear {
+                timer?.cancel()
+            }
+    }
+}
+
+@available(iOS 15.0, *)
+#Preview {
+    AutoScrollTextView(
+        content:
+            "Hey everyone, this air conditioner \ncan completely cool down your house,\n your room, or even your car!\nIf your car doesn’t have air conditi\noning, I highly recommend you get this now. It’s super eas\ny to use—just add water, press two buttons, and it \nstarts cooling down quickly. \nYou can use it in your room, outdoors, in the car, or on the \ngo. Plus, it’s really convenient \nto carry and can run continuously for two days. \nIt drains quickly with just one charge. \nSo, I suggest you grab one now!Hey everyone, \nthis air conditioner can completely cool \ndown your house, your room, or even your car! If your car \ndoesn’t have air conditioning, \nI highly recommend you get this now. \nIt’s super easy to use—just add water, \npress two buttons, and it starts cooling down \nquickly. You can use it in your room, outdoors, \nin the car, or on the go. Plus, it’s really\n convenient to carry and can run\n continuously for two days. It drains quickly with \njust one charge. So, I suggest you grab one now!"
+    )
+    .frame(height: 60)
 }

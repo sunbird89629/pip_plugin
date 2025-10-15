@@ -36,7 +36,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
   late final StreamSubscription<bool> _pipStatusSub;
 
   final voiceScript =
-      "Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!";
+      "Hey everyone, this air conditioner \ncan completely cool down your house,\n your room, or even your car!\nIf your car doesn’t have air conditi\noning, I highly recommend you get this now. It’s super eas\ny to use—just add water, press two buttons, and it \nstarts cooling down quickly. \nYou can use it in your room, outdoors, in the car, or on the \ngo. Plus, it’s really convenient \nto carry and can run continuously for two days. \nIt drains quickly with just one charge. \nSo, I suggest you grab one now!Hey everyone, \nthis air conditioner can completely cool \ndown your house, your room, or even your car! If your car \ndoesn’t have air conditioning, \nI highly recommend you get this now. \nIt’s super easy to use—just add water, \npress two buttons, and it starts cooling down \nquickly. You can use it in your room, outdoors, \nin the car, or on the go. Plus, it’s really\n convenient to carry and can run\n continuously for two days. It drains quickly with \njust one charge. So, I suggest you grab one now!";
 
   @override
   void initState() {
@@ -44,6 +44,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
     _initPlugin().then((_) {
       _pipStatusSub = _plugin.pipActiveStream.listen((isActive) {
         if (!isActive && _pipStarted) {
+          _plugin.controlScroll(isScrolling: false);
           _stopTimer();
           setState(() {
             _pipStarted = false;
@@ -92,12 +93,14 @@ class _PipTimerPageState extends State<PipTimerPage> {
     if (started) {
       setState(() => _pipStarted = true);
       // _startTimer();
+      _plugin.controlScroll(isScrolling: true);
     } else {
       _showSnackBar('Failed to start PiP');
     }
   }
 
   Future<void> _stopPip() async {
+    await _plugin.controlScroll(isScrolling: false);
     await _plugin.stopPip();
     _stopTimer();
     setState(() => _pipStarted = false);

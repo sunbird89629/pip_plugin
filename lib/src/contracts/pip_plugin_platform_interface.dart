@@ -39,6 +39,11 @@ abstract class PipPluginPlatform extends PlatformInterface {
   Future<bool> update(PipConfiguration configuration);
   Future<bool> updateText(String text);
 
+  Future<void> controlScroll({
+    required bool isScrolling,
+    double? speed,
+  });
+
   Stream<bool> get pipActiveStream;
 
   PipConfiguration get configuration;

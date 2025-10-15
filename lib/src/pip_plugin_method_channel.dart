@@ -116,6 +116,22 @@ class MethodChannelPipPlugin extends BasePipPlugin {
   }
 
   @override
+  Future<void> controlScroll({
+    required bool isScrolling,
+    double? speed,
+  }) async {
+    checkInitialized();
+    try {
+      await methodChannel.invokeMethod<bool>('controlScroll', {
+        'isScrolling': isScrolling,
+        'speed': speed,
+      });
+    } catch (e, st) {
+      debugPrint('MethodChannelPipPlugin.controlScroll error: $e\n$st');
+    }
+  }
+
+  @override
   void dispose() {
     super.dispose();
     _configuration = PipConfiguration.initial;

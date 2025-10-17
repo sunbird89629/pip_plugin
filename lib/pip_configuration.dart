@@ -22,7 +22,7 @@ class PipConfiguration {
         textColor: Colors.white,
         textSize: 32.0,
         textAlign: TextAlign.center,
-        ratio: (16, 16),
+        ratio: (16, 9),
         speed: 1.0,
       );
 

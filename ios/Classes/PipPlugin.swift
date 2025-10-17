@@ -49,17 +49,11 @@ private class PipHandler {
                 return
             }
 
-            let bgColor = args["backgroundColor"] as? [Int]
             let ratio = args["ratio"] as? [Int]
-            let textColor = args["textColor"] as? [Int]
             let textSize = args["textSize"] as? Double
-            let textAlign = args["textAlign"] as? String
 
             PipTextAction.shared.setupPip(
-                backgroundColor: bgColor,
-                textColor: textColor,
                 textSize: textSize,
-                textAlign: textAlign,
                 sizeRatio: ratio
             )
 
@@ -127,7 +121,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     private var pipVC: AVPictureInPictureVideoCallViewController?
     private var hostingController: UIHostingController<CustomView>?
     private var model: CustomViewModel?
-//    private var storedConfig: [String: Any] = [:]
 
     private func currentRootView() -> UIView? {
         UIApplication.shared.connectedScenes
@@ -138,10 +131,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     }
 
     func setupPip(
-        backgroundColor: [Int]?,
-        textColor: [Int]?,
         textSize: Double?,
-        textAlign: String?,
         sizeRatio: [Int]?
     ) {
         cleanup()
@@ -149,15 +139,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         guard AVPictureInPictureController.isPictureInPictureSupported(),
               let rootView = currentRootView()
         else { return }
-
-//        storedConfig = [
-//            "text": storedConfig["text"] ?? "",
-//            "backgroundColor": backgroundColor ?? [],
-//            "textColor": textColor ?? [],
-//            "textSize": textSize ?? 16.0,
-//            "textAlign": textAlign ?? "center",
-//            "ratio": sizeRatio ?? [],
-//        ]
 
         let videoCallVC = AVPictureInPictureVideoCallViewController()
         self.pipVC = videoCallVC
@@ -168,31 +149,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
             fontSize:textSize ?? 30.0,
         )
         self.model = m
-
-//        if let bg = backgroundColor, bg.count >= 4 {
-//            m.background = Color(
-//                red: Double(bg[0]) / 255.0,
-//                green: Double(bg[1]) / 255.0,
-//                blue: Double(bg[2]) / 255.0,
-//                opacity: Double(bg[3]) / 255.0
-//            )
-//        }
-//        if let tc = textColor, tc.count >= 4 {
-//            m.color = Color(
-//                red: Double(tc[0]) / 255.0,
-//                green: Double(tc[1]) / 255.0,
-//                blue: Double(tc[2]) / 255.0,
-//                opacity: Double(tc[3]) / 255.0
-//            )
-//        }
-//        if let size = textSize { m.fontSize = size }
-//        if let align = textAlign {
-//            switch align.lowercased() {
-//            case "left": m.alignment = .leading
-//            case "right": m.alignment = .trailing
-//            default: m.alignment = .center
-//            }
-//        }
 
         let host = UIHostingController(rootView: CustomView(model: m))
         self.hostingController = host

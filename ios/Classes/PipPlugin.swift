@@ -164,7 +164,8 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
         let m = CustomViewModel(
             text: "init text",
-            actionHandler: self
+            actionHandler: self,
+            fontSize:textSize ?? 30.0,
         )
         self.model = m
 
@@ -259,35 +260,34 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     }
 
     func updateConfiguration(_ args: [String: Any]) {
-        if let bg = args["backgroundColor"] as? [Int], bg.count >= 4 {
-            model?.background = Color(
-                red: Double(bg[0]) / 255.0,
-                green: Double(bg[1]) / 255.0,
-                blue: Double(bg[2]) / 255.0,
-                opacity: Double(bg[3]) / 255.0
-            )
-        }
+//        if let bg = args["backgroundColor"] as? [Int], bg.count >= 4 {
+//            model?.backgroundColor = Color(
+//                red: Double(bg[0]) / 255.0,
+//                green: Double(bg[1]) / 255.0,
+//                blue: Double(bg[2]) / 255.0,
+//                opacity: Double(bg[3]) / 255.0
+//            )
+//        }
 
-        if let tc = args["textColor"] as? [Int], tc.count >= 4 {
-            model?.color = Color(
-                red: Double(tc[0]) / 255.0,
-                green: Double(tc[1]) / 255.0,
-                blue: Double(tc[2]) / 255.0,
-                opacity: Double(tc[3]) / 255.0
-            )
-        }
+//        if let tc = args["textColor"] as? [Int], tc.count >= 4 {
+//            model?.fontColor = Color(
+//                red: Double(tc[0]) / 255.0,
+//                green: Double(tc[1]) / 255.0,
+//                blue: Double(tc[2]) / 255.0,
+//                opacity: Double(tc[3]) / 255.0
+//            )
+//        }
+//        if let size = args["textSize"] as? Double {
+//            model?.fontSize = size
+//        }
 
-        if let size = args["textSize"] as? Double {
-            model?.fontSize = size
-        }
-
-        if let align = args["textAlign"] as? String {
-            switch align.lowercased() {
-            case "left": model?.alignment = .leading
-            case "right": model?.alignment = .trailing
-            default: model?.alignment = .center
-            }
-        }
+//        if let align = args["textAlign"] as? String {
+//            switch align.lowercased() {
+//            case "left": model?.alignment = .leading
+//            case "right": model?.alignment = .trailing
+//            default: model?.alignment = .center
+//            }
+//        }
 
         if let ratio = args["ratio"] as? [Int],
             let vc = pipVC,
@@ -350,19 +350,22 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
 @available(iOS 15.0, *)
 private class CustomViewModel: ObservableObject {
+    let fontColor: Color = .white
+    let backgroundColor: Color = .black
+    let fontSize: Double
+    let alignment: TextAlignment = .center
+    
     @Published var text: String
-    @Published var color: Color = .white
-    @Published var background: Color = .black
-    @Published var fontSize: Double = 16.0
-    @Published var alignment: TextAlignment = .center
     @Published var isScrolling: Bool = false
     @Published var scrollSpeed: Double = 10.0
+    
 
     private weak var actionHandler: PipTextAction?
 
-    init(text: String, actionHandler: PipTextAction?) {
+    init(text: String, actionHandler: PipTextAction?,fontSize:Double) {
         self.text = text
         self.actionHandler = actionHandler
+        self.fontSize=fontSize
     }
 
     func toggleScrolling() {
@@ -389,7 +392,7 @@ private struct CustomView: View {
     var body: some View {
         ZStack {
             let fontSize = model.fontSize
-            let uiColor = UIColor(model.color)
+            let uiColor = UIColor(model.fontColor)
             
             AutoScrollUILabelView(
                 text: model.text,
@@ -399,261 +402,8 @@ private struct CustomView: View {
                 scrollSpeed: $model.scrollSpeed
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-//            AutoScrollTextView(
-//                content: model.text,
-//                isScrolling: $model.isScrolling,
-//                scrollSpeed: $model.scrollSpeed,
-//                fontSize: $model.fontSize,
-//                textColor: $model.color
-//            )
-//            .background(model.background)
-
-//            VStack {
-//                Spacer()
-//
-//                HStack(spacing: 30) {
-//                    Button(action: { model.decreaseSpeed() }) {
-//                        Image(systemName: "backward.fill")
-//                            .font(.title2)
-//                    }
-//                    .tint(.white)
-//
-//                    Button(action: { model.toggleScrolling() }) {
-//                        Image(
-//                            systemName: model.isScrolling
-//                                ? "pause.fill" : "play.fill"
-//                        )
-//                        .font(.largeTitle)
-//                    }
-//                    .tint(.white)
-//
-//                    Button(action: { model.increaseSpeed() }) {
-//                        Image(systemName: "forward.fill")
-//                            .font(.title2)
-//                    }
-//                    .tint(.white)
-//                }
-//
-//                Spacer()
-//
-//                HStack {
-//                    Spacer()
-//                    Button(action: { model.closePip() }) {
-//                        Image(systemName: "xmark")
-//                            .font(.system(size: 12, weight: .bold))
-//                            .foregroundColor(.black)
-//                            .padding(8)
-//                            .background(.white.opacity(0.8))
-//                            .clipShape(Circle())
-//                    }
-//                    .padding()
-//                }
-//            }
-//            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .clipped()
-    }
-}
-
-@available(iOS 15.0, *)
-struct AutoScrollTextView: View {
-    let content: String
-    @Binding var isScrolling: Bool
-    @Binding var scrollSpeed: Double
-    @Binding var fontSize: Double
-    @Binding var textColor: Color
-
-    @State private var scrollOffset: CGFloat = 0
-    @State private var contentHeight: CGFloat = 0
-
-    private let timer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common)
-        .autoconnect()
-
-    var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            Text(content)
-                .font(.system(size: fontSize))
-                .foregroundColor(textColor)
-                .padding()
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(
-                            key: ContentHeightPreferenceKey.self,
-                            value: geometry.size.height
-                        )
-                    }
-                )
-                .offset(y: scrollOffset)
-        }
-        .onPreferenceChange(ContentHeightPreferenceKey.self) { height in
-            self.contentHeight = height
-        }
-        .onReceive(timer) { _ in
-            guard isScrolling else { return }
-
-            let increment = scrollSpeed / 60.0
-            var newOffset = scrollOffset - increment
-
-            if abs(newOffset) > contentHeight {
-                newOffset = 0
-            }
-            scrollOffset = newOffset
-        }
-        .onChange(of: isScrolling) { isScrolling in
-            if !isScrolling {
-                // scrollOffset = 0
-            }
-        }
-    }
-}
-
-@available(iOS 15.0, *)
-private struct ContentHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-@available(iOS 15.0, *)
-struct PipCounterView: View {
-    @State private var count = 0
-
-    var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Text("👆 可交互计数器")
-                    .foregroundColor(.white)
-                    .font(.headline)
-
-                Text("\(count)")
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(.yellow)
-
-                Button(action: {
-                    count += 1
-                }) {
-                    Text("+1")
-                        .font(.title2)
-                        .bold()
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-
-//                Button(action: {
-//                    if let pip = PipInteractiveManager.shared.pipController,
-//                       pip.isPictureInPictureActive {
-//                        pip.stopPictureInPicture()
-//                    }
-//                }) {
-//                    Image(systemName: "xmark.circle.fill")
-//                        .font(.title)
-//                        .foregroundColor(.white.opacity(0.8))
-//                }
-//                .padding(.top, 20)
-            }
-            .padding()
-        }
-    }
-}
-
-@available(iOS 15.0, *)
-struct AutoScrollUILabelView: UIViewRepresentable {
-    let text: String
-    var font: UIFont
-    var textColor: UIColor
-    @Binding var isScrolling: Bool
-    @Binding var scrollSpeed: Double
-
-    func makeUIView(context: Context) -> UIScrollView {
-        let scrollView = UIScrollView()
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.isScrollEnabled = false // we drive programmatically
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.font = font
-        label.textColor = textColor
-        label.text = text
-        label.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 8),
-            label.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -8),
-            label.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 8),
-            label.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -8),
-            label.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -16)
-        ])
-
-        context.coordinator.setup(scrollView: scrollView, label: label)
-        return scrollView
-    }
-
-    func updateUIView(_ uiView: UIScrollView, context: Context) {
-        context.coordinator.update(text: text, font: font, color: textColor)
-        context.coordinator.updateScrolling(isScrolling: isScrolling, speed: scrollSpeed)
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    class Coordinator {
-        private weak var scrollView: UIScrollView?
-        private weak var label: UILabel?
-        private var displayLink: CADisplayLink?
-        private var lastTime: CFTimeInterval = 0
-        private var speedPerSec: Double = 30 // default
-
-        func setup(scrollView: UIScrollView, label: UILabel) {
-            self.scrollView = scrollView
-            self.label = label
-        }
-
-        func update(text: String, font: UIFont, color: UIColor) {
-            label?.text = text
-            label?.font = font
-            label?.textColor = color
-            // Ensure layout then update contentSize
-            label?.setNeedsLayout()
-            label?.layoutIfNeeded()
-        }
-
-        func updateScrolling(isScrolling: Bool, speed: Double) {
-            speedPerSec = speed
-            if isScrolling { start() } else { stop() }
-        }
-
-        private func start() {
-            stop()
-            lastTime = CACurrentMediaTime()
-            displayLink = CADisplayLink(target: self, selector: #selector(tick))
-            displayLink?.add(to: .main, forMode: .common)
-        }
-
-        private func stop() {
-            displayLink?.invalidate()
-            displayLink = nil
-        }
-
-        @objc private func tick() {
-            guard let sv = scrollView else { return }
-            guard let label = label else { return }
-            let now = CACurrentMediaTime()
-            let dt = now - lastTime
-            lastTime = now
-            let delta = CGFloat(speedPerSec * dt)
-            var newOffset = sv.contentOffset.y + delta
-            let maxOffset = max(0, sv.contentSize.height - sv.bounds.height)
-            if newOffset > maxOffset {
-                newOffset = 0
-            }
-            sv.setContentOffset(CGPoint(x: 0, y: newOffset), animated: false)
-        }
+        .background(model.backgroundColor)
     }
 }

@@ -29,13 +29,13 @@ class PipTimerPage extends StatefulWidget {
 
 class _PipTimerPageState extends State<PipTimerPage> {
   final PipPlugin _plugin = PipPlugin();
-  final Stopwatch _stopwatch = Stopwatch();
   bool _pipStarted = false;
   bool _isSupported = false;
   late final StreamSubscription<bool> _pipStatusSub;
 
   double _currentSpeedValue = 1.0;
   final int baseSpeed = 30;
+  final double fontSize = 30;
 
   final voiceScript =
       "Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!";
@@ -43,18 +43,21 @@ class _PipTimerPageState extends State<PipTimerPage> {
   @override
   void initState() {
     super.initState();
-    _initPlugin().then((_) {
-      _pipStatusSub = _plugin.pipActiveStream.listen((isActive) {
-        if (!isActive && _pipStarted) {
-          _plugin.controlScroll(isScrolling: false);
-          _stopTimer();
-          setState(() {
-            _pipStarted = false;
-          });
-          _showSnackBar('PiP closed — timer stopped.');
-        }
-      });
-    });
+    _initPlugin().then(
+      (_) {
+        _pipStatusSub = _plugin.pipActiveStream.listen(
+          (isActive) {
+            if (!isActive && _pipStarted) {
+              _plugin.controlScroll(isScrolling: false);
+              setState(() {
+                _pipStarted = false;
+              });
+              _showSnackBar('PiP closed — timer stopped.');
+            }
+          },
+        );
+      },
+    );
   }
 
   Future<void> _initPlugin() async {
@@ -62,20 +65,17 @@ class _PipTimerPageState extends State<PipTimerPage> {
     setState(() => _isSupported = supported);
     if (supported) {
       await _plugin.setupPip(
-        configuration: PipConfiguration.initial.copyWith(
-          textColor: Colors.red,
-        ),
+        configuration: PipConfiguration.initial.copyWith(textSize: fontSize),
       );
     }
   }
 
-  void _stopTimer() {
-    _stopwatch.stop();
-  }
-
   Future<void> _startPip() async {
     await _plugin.updateText(voiceScript);
-    await _plugin.update(speed: _currentSpeedValue * baseSpeed);
+    await _plugin.update(
+      speed: _currentSpeedValue * baseSpeed,
+      textSize: fontSize,
+    );
     final started = await _plugin.startPip();
     if (started) {
       setState(() => _pipStarted = true);
@@ -88,7 +88,6 @@ class _PipTimerPageState extends State<PipTimerPage> {
   Future<void> _stopPip() async {
     await _plugin.controlScroll(isScrolling: false);
     await _plugin.stopPip();
-    _stopTimer();
     setState(() => _pipStarted = false);
   }
 
@@ -102,7 +101,6 @@ class _PipTimerPageState extends State<PipTimerPage> {
 
   @override
   void dispose() {
-    // _timer?.cancel();
     _pipStatusSub.cancel();
     super.dispose();
   }
@@ -131,6 +129,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
                 child: TeleprompterText(
                   text: voiceScript,
                   speed: _currentSpeedValue * baseSpeed,
+                  fontSize: fontSize,
                 ),
               ),
               const SizedBox(height: 30),

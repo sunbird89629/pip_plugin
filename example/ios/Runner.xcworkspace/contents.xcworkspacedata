@@ -7,4 +7,13 @@
    <FileRef
       location = "group:Pods/Pods.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:AutoScrollTextView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PipCounterView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:AutoScrollUILabelView.swift">
+   </FileRef>
 </Workspace>

@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 class TeleprompterText extends StatefulWidget {
   final String text;
   final double speed;
-  final bool reverse;
+  final double fontSize;
 
   const TeleprompterText({
     super.key,
     required this.text,
-    this.speed = 30,
-    this.reverse = false,
+    required this.speed,
+    required this.fontSize,
   });
 
   @override
@@ -40,7 +40,7 @@ class _TeleprompterTextState extends State<TeleprompterText> {
     _timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!_isPlaying) return;
       final maxScroll = _controller.position.maxScrollExtent;
-      final delta = (widget.speed / 60) * (widget.reverse ? -1 : 1);
+      final delta = (widget.speed / 60);
       _offset += delta;
       if (_offset < 0) _offset = maxScroll;
       if (_offset > maxScroll) _offset = 0;
@@ -64,10 +64,10 @@ class _TeleprompterTextState extends State<TeleprompterText> {
           SingleChildScrollView(
             controller: _controller,
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(16),
               child: Text(
                 widget.text,
-                style: const TextStyle(fontSize: 24, height: 1.5),
+                style: TextStyle(fontSize: widget.fontSize, height: 1.2),
               ),
             ),
           ),

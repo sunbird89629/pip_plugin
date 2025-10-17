@@ -125,9 +125,9 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     private var pipController: AVPictureInPictureController?
     private var pipVC: AVPictureInPictureVideoCallViewController?
-    private var hostingController: UIHostingController<PipTextView>?
-    private var model: PipTextModel?
-    private var storedConfig: [String: Any] = [:]
+    private var hostingController: UIHostingController<CustomView>?
+    private var model: CustomViewModel?
+//    private var storedConfig: [String: Any] = [:]
 
     private func currentRootView() -> UIView? {
         UIApplication.shared.connectedScenes
@@ -150,50 +150,50 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
               let rootView = currentRootView()
         else { return }
 
-        storedConfig = [
-            "text": storedConfig["text"] ?? "",
-            "backgroundColor": backgroundColor ?? [],
-            "textColor": textColor ?? [],
-            "textSize": textSize ?? 16.0,
-            "textAlign": textAlign ?? "center",
-            "ratio": sizeRatio ?? [],
-        ]
+//        storedConfig = [
+//            "text": storedConfig["text"] ?? "",
+//            "backgroundColor": backgroundColor ?? [],
+//            "textColor": textColor ?? [],
+//            "textSize": textSize ?? 16.0,
+//            "textAlign": textAlign ?? "center",
+//            "ratio": sizeRatio ?? [],
+//        ]
 
         let videoCallVC = AVPictureInPictureVideoCallViewController()
         self.pipVC = videoCallVC
 
-        let m = PipTextModel(
-            text: storedConfig["text"] as? String ?? "",
+        let m = CustomViewModel(
+            text: "init text",
             actionHandler: self
         )
         self.model = m
 
-        if let bg = backgroundColor, bg.count >= 4 {
-            m.background = Color(
-                red: Double(bg[0]) / 255.0,
-                green: Double(bg[1]) / 255.0,
-                blue: Double(bg[2]) / 255.0,
-                opacity: Double(bg[3]) / 255.0
-            )
-        }
-        if let tc = textColor, tc.count >= 4 {
-            m.color = Color(
-                red: Double(tc[0]) / 255.0,
-                green: Double(tc[1]) / 255.0,
-                blue: Double(tc[2]) / 255.0,
-                opacity: Double(tc[3]) / 255.0
-            )
-        }
-        if let size = textSize { m.fontSize = size }
-        if let align = textAlign {
-            switch align.lowercased() {
-            case "left": m.alignment = .leading
-            case "right": m.alignment = .trailing
-            default: m.alignment = .center
-            }
-        }
+//        if let bg = backgroundColor, bg.count >= 4 {
+//            m.background = Color(
+//                red: Double(bg[0]) / 255.0,
+//                green: Double(bg[1]) / 255.0,
+//                blue: Double(bg[2]) / 255.0,
+//                opacity: Double(bg[3]) / 255.0
+//            )
+//        }
+//        if let tc = textColor, tc.count >= 4 {
+//            m.color = Color(
+//                red: Double(tc[0]) / 255.0,
+//                green: Double(tc[1]) / 255.0,
+//                blue: Double(tc[2]) / 255.0,
+//                opacity: Double(tc[3]) / 255.0
+//            )
+//        }
+//        if let size = textSize { m.fontSize = size }
+//        if let align = textAlign {
+//            switch align.lowercased() {
+//            case "left": m.alignment = .leading
+//            case "right": m.alignment = .trailing
+//            default: m.alignment = .center
+//            }
+//        }
 
-        let host = UIHostingController(rootView: PipTextView(model: m))
+        let host = UIHostingController(rootView: CustomView(model: m))
         self.hostingController = host
 
         videoCallVC.addChild(host)
@@ -221,13 +221,13 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         }
 
         if pipController == nil {
-            setupPip(
-                backgroundColor: storedConfig["backgroundColor"] as? [Int],
-                textColor: storedConfig["textColor"] as? [Int],
-                textSize: storedConfig["textSize"] as? Double,
-                textAlign: storedConfig["textAlign"] as? String,
-                sizeRatio: storedConfig["ratio"] as? [Int]
-            )
+//            setupPip(
+//                backgroundColor: storedConfig["backgroundColor"] as? [Int],
+//                textColor: storedConfig["textColor"] as? [Int],
+//                textSize: storedConfig["textSize"] as? Double,
+//                textAlign: storedConfig["textAlign"] as? String,
+//                sizeRatio: storedConfig["ratio"] as? [Int]
+//            )
 
             DispatchQueue.main.async { [weak self] in
                 guard let ctrl = self?.pipController,
@@ -255,7 +255,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     func updateText(_ text: String) {
         model?.text = text
-        storedConfig["text"] = text
+//        storedConfig["text"] = text
     }
 
     func updateConfiguration(_ args: [String: Any]) {
@@ -304,8 +304,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         if let speed = args["speed"] as? Double{
             model?.scrollSpeed = speed
         }
-
-        storedConfig.merge(args) { _, new in new }
+//        storedConfig.merge(args) { _, new in new }
     }
 
     func controlScroll(isScrolling: Bool, speed: Double?) {
@@ -350,7 +349,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 }
 
 @available(iOS 15.0, *)
-private class PipTextModel: ObservableObject {
+private class CustomViewModel: ObservableObject {
     @Published var text: String
     @Published var color: Color = .white
     @Published var background: Color = .black
@@ -384,8 +383,8 @@ private class PipTextModel: ObservableObject {
 }
 
 @available(iOS 15.0, *)
-private struct PipTextView: View {
-    @ObservedObject var model: PipTextModel
+private struct CustomView: View {
+    @ObservedObject var model: CustomViewModel
 
     var body: some View {
         ZStack {
@@ -397,7 +396,7 @@ private struct PipTextView: View {
                 font: UIFont.systemFont(ofSize: CGFloat(fontSize)),
                 textColor: uiColor,
                 isScrolling: $model.isScrolling,
-                speed: $model.scrollSpeed
+                scrollSpeed: $model.scrollSpeed
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
@@ -570,7 +569,7 @@ struct AutoScrollUILabelView: UIViewRepresentable {
     var font: UIFont
     var textColor: UIColor
     @Binding var isScrolling: Bool
-    @Binding var speed: Double
+    @Binding var scrollSpeed: Double
 
     func makeUIView(context: Context) -> UIScrollView {
         let scrollView = UIScrollView()
@@ -597,7 +596,7 @@ struct AutoScrollUILabelView: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIScrollView, context: Context) {
         context.coordinator.update(text: text, font: font, color: textColor)
-        context.coordinator.updateScrolling(isScrolling: isScrolling, speed: speed)
+        context.coordinator.updateScrolling(isScrolling: isScrolling, speed: scrollSpeed)
     }
 
     func makeCoordinator() -> Coordinator {

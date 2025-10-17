@@ -103,6 +103,7 @@ class MethodChannelPipPlugin extends BasePipPlugin {
         'textSize': configuration.textSize,
         'ratio': [configuration.ratio.$1, configuration.ratio.$2],
         'textAlign': configuration.textAlign.name,
+        'speed': configuration.speed,
       };
       final success =
           await methodChannel.invokeMethod<bool>('updatePip', args) ?? false;

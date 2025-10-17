@@ -68,34 +68,17 @@ class _PipTimerPageState extends State<PipTimerPage> {
       );
     }
   }
-  // void _startTimer() {
-  //   _stopwatch.start();
-  //   _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-  //     final elapsed = _stopwatch.elapsed;
-  //     setState(() {
-  //       _time = '${elapsed.inMinutes.toString().padLeft(2, '0')}:'
-  //           '${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
-  //     });
-  //     if (_pipStarted) {
-  //       _plugin.updateText('aaaa${_time}bbbb');
-  //     }
-  //   });
-  // }
 
   void _stopTimer() {
     _stopwatch.stop();
-    // _timer?.cancel();
-    // _timer = null;
   }
 
   Future<void> _startPip() async {
-    // await _plugin.updateText(_time);
     await _plugin.updateText(voiceScript);
     await _plugin.update(speed: _currentSpeedValue * baseSpeed);
     final started = await _plugin.startPip();
     if (started) {
       setState(() => _pipStarted = true);
-      // _startTimer();
       _plugin.controlScroll(isScrolling: true);
     } else {
       _showSnackBar('Failed to start PiP');

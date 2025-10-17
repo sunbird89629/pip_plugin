@@ -299,6 +299,11 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
                 defaultSize: rootView.frame.size
             )
         }
+        
+        
+        if let speed = args["speed"] as? Double{
+            model?.scrollSpeed = speed
+        }
 
         storedConfig.merge(args) { _, new in new }
     }

@@ -40,7 +40,7 @@ class PipConfiguration {
       textSize: textSize ?? this.textSize,
       textAlign: textAlign ?? this.textAlign,
       ratio: ratio ?? this.ratio,
-      speed: speed ?? 1.0,
+      speed: speed ?? this.speed,
     );
   }
 }

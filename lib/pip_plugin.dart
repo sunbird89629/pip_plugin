@@ -62,6 +62,7 @@ class PipPlugin {
       textSize: textSize,
       textAlign: textAlign,
       ratio: ratio,
+      speed: speed,
     );
     return PipPluginPlatform.instance.update(updatedConfig);
   }

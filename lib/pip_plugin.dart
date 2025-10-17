@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:pip_plugin/pip_configuration.dart';
+
 import 'src/contracts/pip_plugin_platform_interface.dart';
 
 class PipPlugin {
@@ -52,6 +53,7 @@ class PipPlugin {
     double? textSize,
     TextAlign? textAlign,
     (int, int)? ratio,
+    double? speed,
   }) {
     _ensureNotDisposed();
     final updatedConfig = PipPluginPlatform.instance.configuration.copyWith(

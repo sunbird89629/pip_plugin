@@ -1,11 +1,23 @@
 import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pip_plugin/src/contracts/base_pip_plugin.dart';
 import 'package:pip_plugin/pip_configuration.dart';
+import 'package:pip_plugin/src/contracts/base_pip_plugin.dart';
+
+class LoggedMethodChannel extends MethodChannel {
+  const LoggedMethodChannel(super.name);
+
+  @override
+  Future<T?> invokeMethod<T>(String method, [arguments]) {
+    log("LoggedMethodChannel:invokeMethod->method:$method,arguments:$arguments");
+    return super.invokeMethod(method, arguments);
+  }
+}
 
 class MethodChannelPipPlugin extends BasePipPlugin {
-  final MethodChannel methodChannel = const MethodChannel('pip_plugin');
+  final MethodChannel methodChannel = const LoggedMethodChannel('pip_plugin');
   late PipConfiguration _configuration;
 
   @override

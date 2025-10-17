@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pip_plugin/pip_configuration.dart';
 import 'package:pip_plugin/pip_plugin.dart';
 import 'package:pip_plugin/text_pip_widget.dart';
+import 'package:pip_plugin_example/teleprompter_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,14 +30,15 @@ class PipTimerPage extends StatefulWidget {
 class _PipTimerPageState extends State<PipTimerPage> {
   final PipPlugin _plugin = PipPlugin();
   final Stopwatch _stopwatch = Stopwatch();
-  Timer? _timer;
-  final String _time = '00:00';
   bool _pipStarted = false;
   bool _isSupported = false;
   late final StreamSubscription<bool> _pipStatusSub;
 
+  double _currentSpeedValue = 1.0;
+  final int baseSpeed = 30;
+
   final voiceScript =
-      "Hey everyone, this air conditioner \ncan completely cool down your house,\n your room, or even your car!\nIf your car doesn’t have air conditi\noning, I highly recommend you get this now. It’s super eas\ny to use—just add water, press two buttons, and it \nstarts cooling down quickly. \nYou can use it in your room, outdoors, in the car, or on the \ngo. Plus, it’s really convenient \nto carry and can run continuously for two days. \nIt drains quickly with just one charge. \nSo, I suggest you grab one now!Hey everyone, \nthis air conditioner can completely cool \ndown your house, your room, or even your car! If your car \ndoesn’t have air conditioning, \nI highly recommend you get this now. \nIt’s super easy to use—just add water, \npress two buttons, and it starts cooling down \nquickly. You can use it in your room, outdoors, \nin the car, or on the go. Plus, it’s really\n convenient to carry and can run\n continuously for two days. It drains quickly with \njust one charge. So, I suggest you grab one now!";
+      "Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!Hey everyone, this air conditioner can completely cool down your house, your room, or even your car! If your car doesn’t have air conditioning, I highly recommend you get this now. It’s super easy to use—just add water, press two buttons, and it starts cooling down quickly. You can use it in your room, outdoors, in the car, or on the go. Plus, it’s really convenient to carry and can run continuously for two days. It drains quickly with just one charge. So, I suggest you grab one now!";
 
   @override
   void initState() {
@@ -82,13 +84,14 @@ class _PipTimerPageState extends State<PipTimerPage> {
 
   void _stopTimer() {
     _stopwatch.stop();
-    _timer?.cancel();
-    _timer = null;
+    // _timer?.cancel();
+    // _timer = null;
   }
 
   Future<void> _startPip() async {
     // await _plugin.updateText(_time);
     await _plugin.updateText(voiceScript);
+    await _plugin.update(speed: _currentSpeedValue * baseSpeed);
     final started = await _plugin.startPip();
     if (started) {
       setState(() => _pipStarted = true);
@@ -116,10 +119,19 @@ class _PipTimerPageState extends State<PipTimerPage> {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    // _timer?.cancel();
     _pipStatusSub.cancel();
     super.dispose();
   }
+
+  final items = <Item>[
+    const Item(label: "0.75x", speed: 0.75),
+    const Item(label: "1.0x", speed: 1.0),
+    const Item(label: "1.25x", speed: 1.25),
+    const Item(label: "1.5x", speed: 1.5),
+    const Item(label: "1.75x", speed: 1.75),
+    // const Item(label: "2.0x", speed: 2.0),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -130,30 +142,72 @@ class _PipTimerPageState extends State<PipTimerPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  voiceScript,
-                  style: const TextStyle(fontSize: 48),
+              Container(
+                height: 300,
+                margin: const EdgeInsets.only(left: 16, right: 16),
+                child: TeleprompterText(
+                  text: voiceScript,
+                  speed: _currentSpeedValue * baseSpeed,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 30),
+              Container(
+                margin: const EdgeInsets.only(left: 16, right: 16),
+                alignment: Alignment.centerLeft,
+                child: const Text(
+                  "Speed",
+                  style: TextStyle(fontSize: 30),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(
+                  items.length,
+                  (index) => Row(
+                    children: [
+                      Radio(
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        value: items[index].speed,
+                        groupValue: _currentSpeedValue,
+                        onChanged: (value) => setState(
+                          () {
+                            _currentSpeedValue = value ?? 1.0;
+                          },
+                        ),
+                      ),
+                      Text(items[index].label),
+                    ],
+                  ),
+                ),
+              ),
               if (_isSupported)
                 ElevatedButton(
                   onPressed: _pipStarted ? _stopPip : _startPip,
-                  child: Text(_pipStarted ? 'Stop PiP' : 'Start PiP'),
+                  child: Text(
+                    _pipStarted
+                        ? 'Dismiss Floating Window'
+                        : 'Launch Floating Window',
+                  ),
                 )
               else
                 const Text(
                   'PiP not supported on this platform',
                   style: TextStyle(color: Colors.red),
                 ),
-              const SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class Item {
+  const Item({
+    required this.label,
+    required this.speed,
+  });
+  final String label;
+  final double speed;
 }

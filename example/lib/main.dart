@@ -154,6 +154,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
                         onChanged: (value) => setState(
                           () {
                             _currentSpeedValue = value ?? 1.0;
+                            // _plugin.update(speed: value ?? 1.0);
                           },
                         ),
                       ),
@@ -162,26 +163,29 @@ class _PipTimerPageState extends State<PipTimerPage> {
                   ),
                 ),
               ),
-              if (_isSupported)
-                ElevatedButton(
-                  onPressed: _pipStarted ? _stopPip : _startPip,
-                  child: Text(
-                    _pipStarted
-                        ? 'Dismiss Floating Window'
-                        : 'Launch Floating Window',
-                  ),
-                )
-              else
-                const Text(
-                  'PiP not supported on this platform',
-                  style: TextStyle(color: Colors.red),
-                ),
+              _buildLaunchButton(),
               const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
+  }
+
+  _buildLaunchButton() {
+    if (_isSupported) {
+      return ElevatedButton(
+        onPressed: _startPip,
+        child: Text(
+          _pipStarted ? 'Update Floating Window' : 'Launch Floating Window',
+        ),
+      );
+    } else {
+      return const Text(
+        'PiP not supported on this platform',
+        style: TextStyle(color: Colors.red),
+      );
+    }
   }
 }
 

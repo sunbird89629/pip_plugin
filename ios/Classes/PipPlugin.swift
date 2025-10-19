@@ -173,36 +173,36 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     }
 
     func startPip() -> Bool {
-        guard AVPictureInPictureController.isPictureInPictureSupported() else {
-            return false
-        }
+//        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+//            return false
+//        }
+//        if pipController == nil {
+////            setupPip(
+////                backgroundColor: storedConfig["backgroundColor"] as? [Int],
+////                textColor: storedConfig["textColor"] as? [Int],
+////                textSize: storedConfig["textSize"] as? Double,
+////                textAlign: storedConfig["textAlign"] as? String,
+////                sizeRatio: storedConfig["ratio"] as? [Int]
+////            )
+//
+//            DispatchQueue.main.async { [weak self] in
+//                guard let ctrl = self?.pipController,
+//                    !ctrl.isPictureInPictureActive
+//                else { return }
+//                ctrl.startPictureInPicture()
+//            }
+//
+//            return true
+//        }
 
-        if pipController == nil {
-//            setupPip(
-//                backgroundColor: storedConfig["backgroundColor"] as? [Int],
-//                textColor: storedConfig["textColor"] as? [Int],
-//                textSize: storedConfig["textSize"] as? Double,
-//                textAlign: storedConfig["textAlign"] as? String,
-//                sizeRatio: storedConfig["ratio"] as? [Int]
-//            )
-
-            DispatchQueue.main.async { [weak self] in
-                guard let ctrl = self?.pipController,
-                    !ctrl.isPictureInPictureActive
-                else { return }
-                ctrl.startPictureInPicture()
-            }
-
-            return true
-        }
-
-        guard let ctrl = pipController,
-            !ctrl.isPictureInPictureActive
-        else {
-            return pipController?.isPictureInPictureActive ?? false
-        }
-
-        ctrl.startPictureInPicture()
+//        guard let ctrl = pipController,
+//            !ctrl.isPictureInPictureActive
+//        else {
+//            return pipController?.isPictureInPictureActive ?? false
+//        }
+//
+//        ctrl.startPictureInPicture()
+        pipController?.startPictureInPicture();
         return true
     }
 
@@ -244,23 +244,21 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 //            default: model?.alignment = .center
 //            }
 //        }
-
-        if let ratio = args["ratio"] as? [Int],
-            let vc = pipVC,
-            let rootView = UIApplication.shared.windows.first?
-                .rootViewController?.view
-        {
-            vc.preferredContentSize = calculateContentSize(
-                ratio: ratio,
-                defaultSize: rootView.frame.size
-            )
-        }
+//        if let ratio = args["ratio"] as? [Int],
+//            let vc = pipVC,
+//            let rootView = UIApplication.shared.windows.first?
+//                .rootViewController?.view
+//        {
+//            vc.preferredContentSize = calculateContentSize(
+//                ratio: ratio,
+//                defaultSize: rootView.frame.size
+//            )
+//        }
         
         
         if let speed = args["speed"] as? Double{
             model?.scrollSpeed = speed
         }
-//        storedConfig.merge(args) { _, new in new }
     }
 
     func controlScroll(isScrolling: Bool, speed: Double?) {
@@ -274,7 +272,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         _ controller: AVPictureInPictureController
     ) {
         Self.onStopPip?()
-        cleanup()
+//        cleanup()
     }
 
     private func cleanup() {

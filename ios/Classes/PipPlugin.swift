@@ -66,9 +66,15 @@ private class PipHandler {
         case "startPip":
             let didStart = PipTextAction.shared.startPip()
             result(didStart)
-
         case "stopPip":
-            PipTextAction.shared.hidePip()
+            PipTextAction.shared.stopPip()
+            result(true)
+        case "updatePip":
+            guard let args = call.arguments as? [String: Any] else {
+                result(false)
+                return
+            }
+            PipTextAction.shared.updateConfiguration(args)
             result(true)
 
         case "updateText":
@@ -80,15 +86,6 @@ private class PipHandler {
             }
             PipTextAction.shared.updateText(text)
             result(true)
-
-        case "updatePip":
-            guard let args = call.arguments as? [String: Any] else {
-                result(false)
-                return
-            }
-            PipTextAction.shared.updateConfiguration(args)
-            result(true)
-
         case "controlScroll":
             guard let args = call.arguments as? [String: Any],
                 let isScrolling = args["isScrolling"] as? Bool
@@ -130,6 +127,8 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
             .rootViewController?.view
     }
 
+    private var boundsObserver: NSKeyValueObservation?
+
     func setupPip(
         textSize: Double?,
         sizeRatio: [Int]?
@@ -137,7 +136,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         cleanup()
 
         guard AVPictureInPictureController.isPictureInPictureSupported(),
-              let rootView = currentRootView()
+            let rootView = currentRootView()
         else { return }
 
         let videoCallVC = AVPictureInPictureVideoCallViewController()
@@ -146,7 +145,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         let m = CustomViewModel(
             text: "init text",
             actionHandler: self,
-            fontSize:textSize ?? 30.0,
+            fontSize: textSize ?? 30.0,
         )
         self.model = m
 
@@ -157,108 +156,134 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         host.didMove(toParent: videoCallVC)
         addConstrainedSubview(host.view, to: videoCallVC.view)
 
-        let contentSize = calculateContentSize(
+        // ✅ 监听 host.view 尺寸变化
+        boundsObserver = host.view.observe(\.bounds, options: [.old, .new]) {
+            [weak self] view, change in
+            guard let self else { return }
+            guard let new = change.newValue else { return }
+            DispatchQueue.main.async {
+                self.handlePipViewBoundsChange(new)
+            }
+        }
+
+        videoCallVC.preferredContentSize = calculateContentSize(
             ratio: sizeRatio,
             defaultSize: rootView.frame.size
         )
-        videoCallVC.preferredContentSize = contentSize
 
-        let source = AVPictureInPictureController.ContentSource(
-            activeVideoCallSourceView: rootView,
-            contentViewController: videoCallVC
+        let controller = AVPictureInPictureController(
+            contentSource: AVPictureInPictureController.ContentSource(
+                activeVideoCallSourceView: rootView,
+                contentViewController: videoCallVC
+            )
         )
-        let controller = AVPictureInPictureController(contentSource: source)
         controller.delegate = self
         self.pipController = controller
     }
 
-    func startPip() -> Bool {
-//        guard AVPictureInPictureController.isPictureInPictureSupported() else {
-//            return false
-//        }
-//        if pipController == nil {
-////            setupPip(
-////                backgroundColor: storedConfig["backgroundColor"] as? [Int],
-////                textColor: storedConfig["textColor"] as? [Int],
-////                textSize: storedConfig["textSize"] as? Double,
-////                textAlign: storedConfig["textAlign"] as? String,
-////                sizeRatio: storedConfig["ratio"] as? [Int]
-////            )
-//
-//            DispatchQueue.main.async { [weak self] in
-//                guard let ctrl = self?.pipController,
-//                    !ctrl.isPictureInPictureActive
-//                else { return }
-//                ctrl.startPictureInPicture()
-//            }
-//
-//            return true
-//        }
+    private var lastPipSize: CGSize = .zero
 
-//        guard let ctrl = pipController,
-//            !ctrl.isPictureInPictureActive
-//        else {
-//            return pipController?.isPictureInPictureActive ?? false
-//        }
-//
-//        ctrl.startPictureInPicture()
-        pipController?.startPictureInPicture();
+    private func handlePipViewBoundsChange(_ newBounds: CGRect) {
+        let newSize = newBounds.size
+        guard lastPipSize != .zero else {
+            lastPipSize = newSize
+            return
+        }
+
+        if newSize.width > lastPipSize.width {
+            print("🔍 检测到 PiP 窗口放大")
+        } else if newSize.width < lastPipSize.width {
+            print("🔍 检测到 PiP 窗口缩小")
+        }
+        lastPipSize = newSize
+    }
+
+    func startPip() -> Bool {
+        //        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+        //            return false
+        //        }
+        //        if pipController == nil {
+        ////            setupPip(
+        ////                backgroundColor: storedConfig["backgroundColor"] as? [Int],
+        ////                textColor: storedConfig["textColor"] as? [Int],
+        ////                textSize: storedConfig["textSize"] as? Double,
+        ////                textAlign: storedConfig["textAlign"] as? String,
+        ////                sizeRatio: storedConfig["ratio"] as? [Int]
+        ////            )
+        //
+        //            DispatchQueue.main.async { [weak self] in
+        //                guard let ctrl = self?.pipController,
+        //                    !ctrl.isPictureInPictureActive
+        //                else { return }
+        //                ctrl.startPictureInPicture()
+        //            }
+        //
+        //            return true
+        //        }
+
+        //        guard let ctrl = pipController,
+        //            !ctrl.isPictureInPictureActive
+        //        else {
+        //            return pipController?.isPictureInPictureActive ?? false
+        //        }
+        //
+        //        ctrl.startPictureInPicture()
+        pipController?.startPictureInPicture()
         return true
     }
 
-    func hidePip() {
+    func stopPip() {
         pipController?.stopPictureInPicture()
+    }
+
+    func updateConfiguration(_ args: [String: Any]) {
+        //        if let bg = args["backgroundColor"] as? [Int], bg.count >= 4 {
+        //            model?.backgroundColor = Color(
+        //                red: Double(bg[0]) / 255.0,
+        //                green: Double(bg[1]) / 255.0,
+        //                blue: Double(bg[2]) / 255.0,
+        //                opacity: Double(bg[3]) / 255.0
+        //            )
+        //        }
+
+        //        if let tc = args["textColor"] as? [Int], tc.count >= 4 {
+        //            model?.fontColor = Color(
+        //                red: Double(tc[0]) / 255.0,
+        //                green: Double(tc[1]) / 255.0,
+        //                blue: Double(tc[2]) / 255.0,
+        //                opacity: Double(tc[3]) / 255.0
+        //            )
+        //        }
+        //        if let size = args["textSize"] as? Double {
+        //            model?.fontSize = size
+        //        }
+
+        //        if let align = args["textAlign"] as? String {
+        //            switch align.lowercased() {
+        //            case "left": model?.alignment = .leading
+        //            case "right": model?.alignment = .trailing
+        //            default: model?.alignment = .center
+        //            }
+        //        }
+        //        if let ratio = args["ratio"] as? [Int],
+        //            let vc = pipVC,
+        //            let rootView = UIApplication.shared.windows.first?
+        //                .rootViewController?.view
+        //        {
+        //            vc.preferredContentSize = calculateContentSize(
+        //                ratio: ratio,
+        //                defaultSize: rootView.frame.size
+        //            )
+        //        }
+
+        if let speed = args["speed"] as? Double {
+            model?.scrollSpeed = speed
+        }
     }
 
     func updateText(_ text: String) {
         model?.text = text
 //        storedConfig["text"] = text
-    }
-
-    func updateConfiguration(_ args: [String: Any]) {
-//        if let bg = args["backgroundColor"] as? [Int], bg.count >= 4 {
-//            model?.backgroundColor = Color(
-//                red: Double(bg[0]) / 255.0,
-//                green: Double(bg[1]) / 255.0,
-//                blue: Double(bg[2]) / 255.0,
-//                opacity: Double(bg[3]) / 255.0
-//            )
-//        }
-
-//        if let tc = args["textColor"] as? [Int], tc.count >= 4 {
-//            model?.fontColor = Color(
-//                red: Double(tc[0]) / 255.0,
-//                green: Double(tc[1]) / 255.0,
-//                blue: Double(tc[2]) / 255.0,
-//                opacity: Double(tc[3]) / 255.0
-//            )
-//        }
-//        if let size = args["textSize"] as? Double {
-//            model?.fontSize = size
-//        }
-
-//        if let align = args["textAlign"] as? String {
-//            switch align.lowercased() {
-//            case "left": model?.alignment = .leading
-//            case "right": model?.alignment = .trailing
-//            default: model?.alignment = .center
-//            }
-//        }
-//        if let ratio = args["ratio"] as? [Int],
-//            let vc = pipVC,
-//            let rootView = UIApplication.shared.windows.first?
-//                .rootViewController?.view
-//        {
-//            vc.preferredContentSize = calculateContentSize(
-//                ratio: ratio,
-//                defaultSize: rootView.frame.size
-//            )
-//        }
-        
-        
-        if let speed = args["speed"] as? Double{
-            model?.scrollSpeed = speed
-        }
     }
 
     func controlScroll(isScrolling: Bool, speed: Double?) {
@@ -268,11 +293,27 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         }
     }
 
+    var lastSize = CGSize.zero
+
+    func pictureInPictureController(
+        _ controller: AVPictureInPictureController,
+        didTransitionToRenderSize newRenderSize: CGSize
+    ) {
+        if lastSize != .zero {
+            if newRenderSize.width > lastSize.width {
+                print("🔍 用户双击放大 PIP")
+            } else if newRenderSize.width < lastSize.width {
+                print("🔍 用户双击缩小 PIP")
+            }
+        }
+        lastSize = newRenderSize
+    }
+
     func pictureInPictureControllerDidStopPictureInPicture(
         _ controller: AVPictureInPictureController
     ) {
         Self.onStopPip?()
-//        cleanup()
+        //        cleanup()
     }
 
     private func cleanup() {
@@ -308,18 +349,17 @@ private class CustomViewModel: ObservableObject {
     let backgroundColor: Color = .black
     let fontSize: Double
     let alignment: TextAlignment = .center
-    
+
     @Published var text: String
     @Published var isScrolling: Bool = false
     @Published var scrollSpeed: Double = 10.0
-    
 
     private weak var actionHandler: PipTextAction?
 
-    init(text: String, actionHandler: PipTextAction?,fontSize:Double) {
+    init(text: String, actionHandler: PipTextAction?, fontSize: Double) {
         self.text = text
         self.actionHandler = actionHandler
-        self.fontSize=fontSize
+        self.fontSize = fontSize
     }
 
     func toggleScrolling() {
@@ -335,7 +375,7 @@ private class CustomViewModel: ObservableObject {
     }
 
     func closePip() {
-        actionHandler?.hidePip()
+        actionHandler?.stopPip()
     }
 }
 
@@ -346,12 +386,11 @@ private struct CustomView: View {
     var body: some View {
         ZStack {
             let fontSize = model.fontSize
-            let uiColor = UIColor(model.fontColor)
-            
+
             AutoScrollUILabelView(
                 text: model.text,
                 font: UIFont.systemFont(ofSize: CGFloat(fontSize)),
-                textColor: uiColor,
+                textColor: UIColor(model.fontColor),
                 isScrolling: $model.isScrolling,
                 scrollSpeed: $model.scrollSpeed
             )

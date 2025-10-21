@@ -71,26 +71,6 @@ class _TeleprompterTextState extends State<TeleprompterText> {
               ),
             ),
           ),
-          // 可选：添加一个渐变遮罩以提升视觉效果
-          // Positioned.fill(
-          //   child: IgnorePointer(
-          //     child: Container(
-          //       decoration: const BoxDecoration(
-          //         gradient: LinearGradient(
-          //           begin: Alignment.topCenter,
-          //           end: Alignment.bottomCenter,
-          //           colors: [
-          //             Colors.black26,
-          //             Colors.transparent,
-          //             Colors.transparent,
-          //             Colors.black26,
-          //           ],
-          //           stops: [0, 0.1, 0.9, 1],
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

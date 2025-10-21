@@ -85,11 +85,11 @@ class _PipTimerPageState extends State<PipTimerPage> {
     }
   }
 
-  Future<void> _stopPip() async {
-    await _plugin.controlScroll(isScrolling: false);
-    await _plugin.stopPip();
-    setState(() => _pipStarted = false);
-  }
+  // Future<void> _stopPip() async {
+  //   await _plugin.controlScroll(isScrolling: false);
+  //   await _plugin.stopPip();
+  //   setState(() => _pipStarted = false);
+  // }
 
   void _showSnackBar(String message) {
     if (!mounted) return;

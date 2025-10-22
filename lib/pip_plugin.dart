@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:pip_plugin/pip_configuration.dart';
+import 'package:simple_pip_mode/actions/pip_action.dart';
 
 import 'src/contracts/pip_plugin_platform_interface.dart';
 
@@ -91,6 +92,11 @@ class PipPlugin {
   Stream<bool> get pipActiveStream {
     _ensureNotDisposed();
     return PipPluginPlatform.instance.pipActiveStream;
+  }
+
+  Stream<PipAction> get pipActionStream {
+    _ensureNotDisposed();
+    return PipPluginPlatform.instance.pipActionStream;
   }
 
   bool get isInitialized {

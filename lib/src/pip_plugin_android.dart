@@ -34,6 +34,7 @@ class PipPluginAndroid extends BasePipPlugin {
       pip = SimplePip(
         onPipEntered: handlePipEntered,
         onPipExited: handlePipExited,
+        onPipAction: handlePipAction,
       );
       markInitialized();
       return true;

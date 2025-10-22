@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pip_plugin/src/pip_plugin_android.dart';
 import 'package:pip_plugin/src/contracts/pip_plugin_platform_interface.dart';
+import 'package:pip_plugin/src/pip_plugin_android.dart';
 
 class TextPipWidget extends StatefulWidget {
   const TextPipWidget({super.key, this.child});
@@ -80,30 +80,31 @@ class _PipContent extends StatelessWidget {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _scrollToEnd();
               });
-              return Scaffold(
-                body: Container(
-                  color: value.backgroundColor,
-                  width: double.infinity,
-                  height: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Align(
-                    alignment: getAlignment(value.textAlign),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      controller: scrollController,
-                      child: Text(
-                        text,
-                        textAlign: value.textAlign,
-                        style: TextStyle(
-                          color: value.textColor,
-                          fontSize: value.textSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
+              return const Text('this is a test widget');
+              // return Scaffold(
+              //   body: Container(
+              //     color: value.backgroundColor,
+              //     width: double.infinity,
+              //     height: double.infinity,
+              //     padding: const EdgeInsets.symmetric(horizontal: 10),
+              //     child: Align(
+              //       alignment: getAlignment(value.textAlign),
+              //       child: SingleChildScrollView(
+              //         scrollDirection: Axis.horizontal,
+              //         controller: scrollController,
+              //         child: Text(
+              //           text,
+              //           textAlign: value.textAlign,
+              //           style: TextStyle(
+              //             color: value.textColor,
+              //             fontSize: value.textSize,
+              //             fontWeight: FontWeight.bold,
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              // );
             });
       },
     );

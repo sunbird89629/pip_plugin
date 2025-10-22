@@ -1,10 +1,15 @@
 import 'dart:async';
-import 'package:pip_plugin/src/contracts/pip_plugin_platform_interface.dart';
+
 import 'package:pip_plugin/pip_configuration.dart';
+import 'package:pip_plugin/src/contracts/pip_plugin_platform_interface.dart';
+import 'package:simple_pip_mode/actions/pip_action.dart';
 
 abstract class BasePipPlugin extends PipPluginPlatform {
   final StreamController<bool> _pipStatusController =
       StreamController<bool>.broadcast();
+
+  final StreamController<PipAction> _pipActionController =
+      StreamController<PipAction>.broadcast();
 
   bool _isInitialized = false;
 
@@ -15,8 +20,11 @@ abstract class BasePipPlugin extends PipPluginPlatform {
 
   void handlePipExited() => _pipStatusController.add(false);
 
+  void handlePipAction(PipAction action) => _pipActionController.add(action);
+
   @override
   Stream<bool> get pipActiveStream => _pipStatusController.stream;
+  Stream<PipAction> get pipActionStream => _pipActionController.stream;
 
   void markInitialized() {
     _isInitialized = true;

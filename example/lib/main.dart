@@ -85,12 +85,6 @@ class _PipTimerPageState extends State<PipTimerPage> {
     }
   }
 
-  // Future<void> _stopPip() async {
-  //   await _plugin.controlScroll(isScrolling: false);
-  //   await _plugin.stopPip();
-  //   setState(() => _pipStarted = false);
-  // }
-
   void _showSnackBar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -116,59 +110,76 @@ class _PipTimerPageState extends State<PipTimerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return TextPipWidget(
-      child: Scaffold(
-        appBar: AppBar(title: const Text('PiP Timer')),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                height: 300,
-                margin: const EdgeInsets.only(left: 16, right: 16),
-                child: TeleprompterText(
-                  text: voiceScript,
-                  speed: _currentSpeedValue * baseSpeed,
-                  fontSize: fontSize,
-                ),
-              ),
-              const SizedBox(height: 30),
-              Container(
-                margin: const EdgeInsets.only(left: 16, right: 16),
-                alignment: Alignment.centerLeft,
-                child: const Text(
-                  "Speed",
-                  style: TextStyle(fontSize: 30),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(
-                  items.length,
-                  (index) => Row(
-                    children: [
-                      Radio(
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        value: items[index].speed,
-                        groupValue: _currentSpeedValue,
-                        onChanged: (value) => setState(
-                          () {
-                            _currentSpeedValue = value ?? 1.0;
-                            // _plugin.update(speed: value ?? 1.0);
-                          },
-                        ),
-                      ),
-                      Text(items[index].label),
-                    ],
-                  ),
-                ),
-              ),
-              _buildLaunchButton(),
-              const SizedBox(height: 40),
-            ],
+    print("PipTimerPage.build._pipStarted:$_pipStarted");
+    if (_pipStarted) {
+      return Scaffold(body: _buildContentWidget());
+    } else {
+      return TextPipWidget(
+        child: Scaffold(
+          appBar: AppBar(title: const Text('PiP Timer')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildContentWidget(),
+                const SizedBox(height: 30),
+                _buildSpeedWidget(),
+                _buildLaunchButton(),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
+      );
+    }
+  }
+
+  Container _buildContentWidget() {
+    return Container(
+      height: 300,
+      margin: const EdgeInsets.only(left: 16, right: 16),
+      child: TeleprompterText(
+        text: voiceScript,
+        speed: _currentSpeedValue * baseSpeed,
+        fontSize: fontSize,
       ),
+    );
+  }
+
+  Widget _buildSpeedWidget() {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(left: 16, right: 16),
+          alignment: Alignment.centerLeft,
+          child: const Text(
+            "Speed",
+            style: TextStyle(fontSize: 30),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(
+            items.length,
+            (index) => Row(
+              children: [
+                Radio(
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  value: items[index].speed,
+                  groupValue: _currentSpeedValue,
+                  onChanged: (value) => setState(
+                    () {
+                      _currentSpeedValue = value ?? 1.0;
+                      // _plugin.update(speed: value ?? 1.0);
+                    },
+                  ),
+                ),
+                Text(items[index].label),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -117,7 +117,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
     private var pipController: AVPictureInPictureController?
     private var pipVC: AVPictureInPictureVideoCallViewController?
     private var hostingController: UIHostingController<CustomView>?
-    private var model: CustomViewModel?
+    private var viewModel: CustomViewModel?
 
     private func currentRootView() -> UIView? {
         UIApplication.shared.connectedScenes
@@ -147,7 +147,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
             actionHandler: self,
             fontSize: textSize ?? 30.0,
         )
-        self.model = m
+        self.viewModel = m
 
         let host = UIHostingController(rootView: CustomView(model: m))
         self.hostingController = host
@@ -191,9 +191,13 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         }
 
         if newSize.width > lastPipSize.width {
-            print("🔍 检测到 PiP 窗口放大")
+//            print("🔍 检测到 PiP 窗口放大")
+//            PipTextAction.shared.
+            viewModel?.isScrolling=true;
         } else if newSize.width < lastPipSize.width {
-            print("🔍 检测到 PiP 窗口缩小")
+//            print("🔍 检测到 PiP 窗口缩小")
+//            PipTextAction.shared.startPip()
+            viewModel?.isScrolling=false;
         }
         lastPipSize = newSize
     }
@@ -277,19 +281,19 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         //        }
 
         if let speed = args["speed"] as? Double {
-            model?.scrollSpeed = speed
+            viewModel?.scrollSpeed = speed
         }
     }
 
     func updateText(_ text: String) {
-        model?.text = text
+        viewModel?.text = text
 //        storedConfig["text"] = text
     }
 
     func controlScroll(isScrolling: Bool, speed: Double?) {
-        model?.isScrolling = isScrolling
+        viewModel?.isScrolling = isScrolling
         if let newSpeed = speed {
-            model?.scrollSpeed = newSpeed
+            viewModel?.scrollSpeed = newSpeed
         }
     }
 
@@ -321,7 +325,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         hostingController = nil
         pipVC = nil
         pipController = nil
-        model = nil
+        viewModel = nil
     }
 
     private func calculateContentSize(ratio: [Int]?, defaultSize: CGSize)

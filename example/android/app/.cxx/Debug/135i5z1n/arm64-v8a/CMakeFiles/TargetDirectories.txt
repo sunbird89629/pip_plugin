@@ -1,0 +1,2 @@
+/Users/hao/work/flutter/pip_plugin/example/android/app/.cxx/Debug/135i5z1n/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/hao/work/flutter/pip_plugin/example/android/app/.cxx/Debug/135i5z1n/arm64-v8a/CMakeFiles/rebuild_cache.dir

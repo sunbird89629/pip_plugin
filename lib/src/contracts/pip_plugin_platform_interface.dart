@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:pip_plugin/pip_configuration.dart';
 import 'package:pip_plugin/src/pip_plugin_android.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:simple_pip_mode/actions/pip_action.dart';
 
 import '../pip_plugin_method_channel.dart';
 
@@ -45,6 +47,8 @@ abstract class PipPluginPlatform extends PlatformInterface {
   });
 
   Stream<bool> get pipActiveStream;
+
+  Stream<PipAction> get pipActionStream;
 
   PipConfiguration get configuration;
   bool get isInitialized;

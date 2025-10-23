@@ -12,7 +12,6 @@ abstract class BasePipPlugin extends PipPluginPlatform {
       StreamController<PipAction>.broadcast();
 
   bool _isInitialized = false;
-
   @override
   bool get isInitialized => _isInitialized;
 
@@ -24,6 +23,7 @@ abstract class BasePipPlugin extends PipPluginPlatform {
 
   @override
   Stream<bool> get pipActiveStream => _pipStatusController.stream;
+  @override
   Stream<PipAction> get pipActionStream => _pipActionController.stream;
 
   void markInitialized() {
@@ -41,11 +41,6 @@ abstract class BasePipPlugin extends PipPluginPlatform {
     String? windowTitle,
     PipConfiguration? configuration,
   }) async {
-    if (_isInitialized) return true;
-    if (!await isPipSupported()) {
-      throw Exception('PIP is not supported on this device.');
-    }
-
     return performSetup(windowTitle, configuration);
   }
 

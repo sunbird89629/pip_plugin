@@ -84,6 +84,19 @@ class MethodChannelPipPlugin extends BasePipPlugin {
   }
 
   @override
+  Future<bool> destroyPip() async {
+    checkInitialized();
+    try {
+      final destroyed =
+          await methodChannel.invokeMethod<bool>('destroyPip') ?? false;
+      return destroyed;
+    } catch (e, st) {
+      debugPrint('MethodChannelPipPlugin.destroyPip error: $e\n$st');
+      return false;
+    }
+  }
+
+  @override
   Future<bool> isPipSupported() async {
     try {
       return await methodChannel.invokeMethod<bool>('isPipSupported') ?? false;

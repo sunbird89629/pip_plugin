@@ -99,6 +99,11 @@ class PipPlugin {
     return PipPluginPlatform.instance.pipActionStream;
   }
 
+  Future<bool> destroyPip() async {
+    _ensureNotDisposed();
+    return PipPluginPlatform.instance.destroyPip();
+  }
+
   bool get isInitialized {
     _ensureNotDisposed();
     return PipPluginPlatform.instance.isInitialized;

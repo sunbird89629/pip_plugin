@@ -65,6 +65,11 @@ class PipPluginAndroid extends BasePipPlugin {
   }
 
   @override
+  Future<bool> destroyPip() async {
+    return false;
+  }
+
+  @override
   Future<bool> update(PipConfiguration configuration) async {
     checkInitialized();
     try {

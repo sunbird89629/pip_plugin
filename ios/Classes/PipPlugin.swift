@@ -43,6 +43,8 @@ private class PipHandler {
         channel: FlutterMethodChannel?
     ) {
         switch call.method {
+        case "isPipSupported":
+            result(AVPictureInPictureController.isPictureInPictureSupported())
         case "setupPip":
             guard let args = call.arguments as? [String: Any] else {
                 result(false)
@@ -68,6 +70,9 @@ private class PipHandler {
             result(didStart)
         case "stopPip":
             PipTextAction.shared.stopPip()
+            result(true)
+        case "destroyPip":
+            PipTextAction.shared.destroyPip()
             result(true)
         case "updatePip":
             guard let args = call.arguments as? [String: Any] else {
@@ -99,10 +104,6 @@ private class PipHandler {
                 speed: speed
             )
             result(true)
-
-        case "isPipSupported":
-            result(AVPictureInPictureController.isPictureInPictureSupported())
-
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -191,13 +192,15 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         }
 
         if newSize.width > lastPipSize.width {
-//            print("🔍 检测到 PiP 窗口放大")
-//            PipTextAction.shared.
-            viewModel?.isScrolling=true;
+            //            print("🔍 检测到 PiP 窗口放大")
+            //            PipTextAction.shared.
+            viewModel?.isScrolling = true
+            viewModel?.playing=true
         } else if newSize.width < lastPipSize.width {
-//            print("🔍 检测到 PiP 窗口缩小")
-//            PipTextAction.shared.startPip()
-            viewModel?.isScrolling=false;
+            //            print("🔍 检测到 PiP 窗口缩小")
+            //            PipTextAction.shared.startPip()
+            viewModel?.isScrolling = false
+            viewModel?.playing=false
         }
         lastPipSize = newSize
     }
@@ -238,6 +241,11 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     func stopPip() {
         pipController?.stopPictureInPicture()
+    }
+    
+    
+    func destroyPip(){
+        cleanup()
     }
 
     func updateConfiguration(_ args: [String: Any]) {
@@ -287,7 +295,7 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     func updateText(_ text: String) {
         viewModel?.text = text
-//        storedConfig["text"] = text
+        //        storedConfig["text"] = text
     }
 
     func controlScroll(isScrolling: Bool, speed: Double?) {
@@ -299,19 +307,19 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     var lastSize = CGSize.zero
 
-    func pictureInPictureController(
-        _ controller: AVPictureInPictureController,
-        didTransitionToRenderSize newRenderSize: CGSize
-    ) {
-        if lastSize != .zero {
-            if newRenderSize.width > lastSize.width {
-                print("🔍 用户双击放大 PIP")
-            } else if newRenderSize.width < lastSize.width {
-                print("🔍 用户双击缩小 PIP")
-            }
-        }
-        lastSize = newRenderSize
-    }
+//    func pictureInPictureController(
+//        _ controller: AVPictureInPictureController,
+//        didTransitionToRenderSize newRenderSize: CGSize
+//    ) {
+//        if lastSize != .zero {
+//            if newRenderSize.width > lastSize.width {
+//                print("🔍 用户双击放大 PIP")
+//            } else if newRenderSize.width < lastSize.width {
+//                print("🔍 用户双击缩小 PIP")
+//            }
+//        }
+//        lastSize = newRenderSize
+//    }
 
     func pictureInPictureControllerDidStopPictureInPicture(
         _ controller: AVPictureInPictureController
@@ -319,7 +327,8 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         Self.onStopPip?()
         //        cleanup()
     }
-
+    
+    
     private func cleanup() {
         hostingController?.view.removeFromSuperview()
         hostingController = nil
@@ -357,6 +366,7 @@ private class CustomViewModel: ObservableObject {
     @Published var text: String
     @Published var isScrolling: Bool = false
     @Published var scrollSpeed: Double = 10.0
+    @Published var playing: Bool = false
 
     private weak var actionHandler: PipTextAction?
 
@@ -389,16 +399,22 @@ private struct CustomView: View {
 
     var body: some View {
         ZStack {
-            let fontSize = model.fontSize
-
-            AutoScrollUILabelView(
-                text: model.text,
-                font: UIFont.systemFont(ofSize: CGFloat(fontSize)),
-                textColor: UIColor(model.fontColor),
-                isScrolling: $model.isScrolling,
-                scrollSpeed: $model.scrollSpeed
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if model.playing {
+                AutoScrollUILabelView(
+                    text: model.text,
+                    font: UIFont.systemFont(ofSize: CGFloat(model.fontSize)),
+                    textColor: UIColor(model.fontColor),
+                    isScrolling: $model.isScrolling,
+                    scrollSpeed: $model.scrollSpeed
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Text("双击开始")
+                    .foregroundColor(.white)
+                    .font(.system(size: 20, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .clipped()
         .background(model.backgroundColor)

@@ -34,9 +34,10 @@ abstract class PipPluginPlatform extends PlatformInterface {
     PipConfiguration? configuration,
   });
 
+  Future<bool> isPipSupported();
   Future<bool> startPip();
   Future<bool> stopPip();
-  Future<bool> isPipSupported();
+  Future<bool> destroyPip();
 
   Future<bool> update(PipConfiguration configuration);
   Future<bool> updateText(String text);

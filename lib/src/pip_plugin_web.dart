@@ -183,4 +183,9 @@ class PipPluginWeb extends BasePipPlugin {
     // TODO: implement controlScroll
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> destroyPip() async {
+    return false;
+  }
 }

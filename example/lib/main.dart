@@ -48,7 +48,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
         _pipStatusSub = _plugin.pipActiveStream.listen(
           (isActive) {
             if (!isActive && _pipStarted) {
-              _plugin.controlScroll(isScrolling: false);
+              // _plugin.controlScroll(isScrolling: false);
               setState(() {
                 _pipStarted = false;
               });
@@ -79,7 +79,7 @@ class _PipTimerPageState extends State<PipTimerPage> {
     final started = await _plugin.startPip();
     if (started) {
       setState(() => _pipStarted = true);
-      _plugin.controlScroll(isScrolling: true);
+      // _plugin.controlScroll(isScrolling: true);
     } else {
       _showSnackBar('Failed to start PiP');
     }

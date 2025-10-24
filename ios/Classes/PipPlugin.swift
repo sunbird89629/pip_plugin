@@ -197,19 +197,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         print("handlePipViewBoundsChange.isExpanded:\(isExpanded)")
         
         viewModel?.isScrolling = isExpanded
-//        if isExpanded {
-//            // 📈 PIP 处于放大状态
-//
-//        if lastPipSize == CGSize.zero {
-//            //initial nothing to do
-//        } else if newSize.width > lastPipSize.width {
-//            //            print("🔍 检测到 PiP 窗口放大")
-//            viewModel?.isScrolling = true
-//        } else if newSize.width < lastPipSize.width {
-//            //            print("🔍 检测到 PiP 窗口缩小")
-//            viewModel?.isScrolling = false
-//        }
-//        lastPipSize = newSize
     }
 
     func startPip() -> Bool {
@@ -272,7 +259,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
 
     func updateText(_ text: String) {
         viewModel?.text = text
-        //        storedConfig["text"] = text
     }
 
     func controlScroll(isScrolling: Bool) {
@@ -285,7 +271,6 @@ private class PipTextAction: NSObject, AVPictureInPictureControllerDelegate {
         _ controller: AVPictureInPictureController
     ) {
         Self.onStopPip?()
-        //        cleanup()
     }
 
     private func cleanup() {
@@ -355,7 +340,7 @@ private struct CustomView: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                Text("双击开始")
+                Text("Double tap to start")
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .medium))
                     .multilineTextAlignment(.center)
